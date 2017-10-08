@@ -3,13 +3,24 @@
         {
             "name": "Win32",
             "includePath": [
+<<<<<<< HEAD
                 "C:\\Users\\hans3.ROSE-HULMAN\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.6.19\\cores\\arduino"
+=======
+                "C:\\Users\\hongs4\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.6.19\\cores\\arduino"
+>>>>>>> a5b779ec9fc00b2063a032d1fbbc284d764085f4
             ],
             "browse": {
                 "limitSymbolsToIncludedHeaders": false,
                 "path": [
+<<<<<<< HEAD
                     "C:\\Users\\hans3.ROSE-HULMAN\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.6.19\\cores\\arduino",
                     "${workspaceRoot}"
+=======
+                    "C:\\Users\\hongs4\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.6.19\\cores\\arduino",
+                    "${workspaceRoot}",
+                    "C:\\Users\\hongs4\\Documents\\Arduino\\libraries",
+                    "C:\\Program Files (x86)\\Arduino\\libraries"
+>>>>>>> a5b779ec9fc00b2063a032d1fbbc284d764085f4
                 ]
             },
             "intelliSenseMode": "msvc-x64"
