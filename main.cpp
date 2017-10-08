@@ -1,3 +1,4 @@
+#include <Arduino>
 #include <Servo.h>
 
 const float SERVO_CALI = 93.0;
