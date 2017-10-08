@@ -1,10 +1,10 @@
-language: c
-sudo: false
-before_install:
-  - source <(curl -SLs https://raw.githubusercontent.com/adafruit/travis-ci-arduino/master/install.sh)
+
+language: python
+python:
+    - "2.7"
+
+install:
+    - python -c "$(curl -fsSL https://raw.githubusercontent.com/platformio/platformio/master/scripts/get-platformio.py)"
+
 script:
-  - build_platform uno
-notifications:
-  email:
-    on_success: change
-    on_failure: changeS
+    - platformio ci ./ --board=uno
