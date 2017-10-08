@@ -1,0 +1,5 @@
+{
+    "sketch": "main.cpp",
+    "board": "arduino:avr:uno",
+    "port": "COM8"
+}
