@@ -55,35 +55,40 @@ uint64_t u64SysTick = 0;
 
 void loop()
 {
-    u64SysTick = millis();
-    while(!(millis() > u64SysTick+5000)){
-        vServoForward(1);
-    }
+        while(analogRead(A0) > 600){
+            vServoBackward(0);
+            vServoGrab();
+            delay(50);
+        }
 
-    u64SysTick = millis();
-    while(!(millis() > u64SysTick+5000)){
-        vServoBackward(1);
-    }
+        if((millis() < u64SysTick+5000)){
+            vServoForward(1);
+        }
 
-    u64SysTick = millis();
-    while(!(millis() > u64SysTick+800)){
-        vServoGrab();
-        vServoTurn(1);
-    }
+        if((millis() > u64SysTick+5000) && (millis() < u64SysTick+10000)){
+            vServoBackward(1);
+        }
 
-    u64SysTick = millis();
-    while(!(millis() > u64SysTick+800)){
-        vServoTurn(-1);
-    }
+        if((millis() > u64SysTick+10000) && (millis() < u64SysTick+15000)){
+            vServoGrab();
+            vServoTurn(1);
+        }
 
-    u64SysTick = millis();
-    while(!(millis() > u64SysTick+1000)){
-        vServoTurn(1);
-    }
+        if((millis() > u64SysTick+15000) && (millis() < u64SysTick+20000)){
+            vServoTurn(-1);
+        }
 
-    u64SysTick = millis();
-    while(!(millis() > u64SysTick+1000)){
-        vServoDegrab();
-        vServoTurn(-1);
-    }
+        if((millis() > u64SysTick+20000) && (millis() < u64SysTick+25000)){
+            vServoTurn(1);
+        }
+
+        if((millis() > u64SysTick+25000) && (millis() < u64SysTick+30000)){
+            vServoDegrab();
+            vServoTurn(-1);
+        }
+
+        if((millis() > u64SysTick+30000)){
+            u64SysTick = millis();
+        }        
+
 }
