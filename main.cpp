@@ -30,9 +30,14 @@ void vServoBackward(float speed){
     servoR.write(SERVO_CALI + speed * WHEEL_THRESHOLD );
 }
 
-void vServoTurn(float speed){
+void vServoSpin(float speed){
     servoL.write(SERVO_CALI + speed * WHEEL_THRESHOLD);
     servoR.write(SERVO_CALI + speed * WHEEL_THRESHOLD);
+}
+
+void vServoTurn(float speed, float bias){
+    servoL.write(SERVO_CALI + speed * WHEEL_THRESHOLD * bias);
+    servoR.write(SERVO_CALI - speed * WHEEL_THRESHOLD);
 }
 
 void vServoGrab(){
@@ -59,32 +64,36 @@ void loop()
             vServoBackward(0);
             vServoGrab();
             delay(50);
+            Serial.println(analogRead(A0));
+            delay(50);
         }
 
         if((millis() < u64SysTick+5000)){
-            vServoForward(1);
+            vServoDegrab();
+            vServoForward(0.8);
         }
 
         if((millis() > u64SysTick+5000) && (millis() < u64SysTick+10000)){
-            vServoBackward(1);
+            vServoDegrab();
+            vServoBackward(0.8);
         }
 
         if((millis() > u64SysTick+10000) && (millis() < u64SysTick+15000)){
             vServoGrab();
-            vServoTurn(1);
+            vServoTurn(0.2, 1.8);
         }
 
         if((millis() > u64SysTick+15000) && (millis() < u64SysTick+20000)){
-            vServoTurn(-1);
+            vServoTurn(-0.2, 1.8);
         }
 
         if((millis() > u64SysTick+20000) && (millis() < u64SysTick+25000)){
-            vServoTurn(1);
+            vServoSpin(1);
         }
 
         if((millis() > u64SysTick+25000) && (millis() < u64SysTick+30000)){
             vServoDegrab();
-            vServoTurn(-1);
+            vServoSpin(-1);
         }
 
         if((millis() > u64SysTick+30000)){
