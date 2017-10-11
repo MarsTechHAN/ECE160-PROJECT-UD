@@ -30,3 +30,6 @@
 *.exe
 *.out
 *.app
+
+# Json configure files
+*.json
