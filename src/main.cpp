@@ -1,6 +1,7 @@
+/*================================================*/
 #include <Arduino.h>
 #include <Servo.h>
-
+/*================================================*/
 const float SERVO_CALI = 93.0;
 
 const uint8_t WHEEL_THRESHOLD   = 20;
@@ -11,6 +12,7 @@ const uint8_t SERVO_RIGHT_PIN   = 12;
 const uint8_t SERVO_GRAP_PIN    = 11;
 
 Servo servoL;
+
 Servo servoR;
 Servo servoG;
 
