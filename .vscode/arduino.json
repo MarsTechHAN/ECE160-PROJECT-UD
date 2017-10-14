@@ -1,4 +1,4 @@
 {
     "board": "arduino:avr:uno",
-    "sketch": "Servo\\examples\\Knob\\Knob.ino"
+    "sketch": "main.cpp"
 }
