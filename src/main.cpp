@@ -1,6 +1,7 @@
 /*====================INC FILE==================*/
 #include <Arduino.h>
 #include <Servo.h>
+#include <PS2X_lib.h> 
 /*=================INC FILE END=================*/
 
 /*================GLOBAL DEFINE=================*/
@@ -45,10 +46,6 @@ const uint8_t WHEEL_THRESHOLD   = 20; //SERVO FLEX REGION
 
 #ifndef ENABLE_AUTO_MODE
     #warning "############AUTOMATION MODE DISABLED##################"
-#endif
-
-#ifdef USE_BLUETOOTH_JOYSTICK
-#include <PS2X_lib.h> 
 #endif
 /*==============GLOBAL DEFINE END===============*/
 
