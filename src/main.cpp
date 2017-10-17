@@ -7,7 +7,7 @@
 /*================GLOBAL DEFINE=================*/
 const float SERVO_CALI = 93.0; //SERVO MID POINT CALI NUMBER
 
-const uint8_t WHEEL_THRESHOLD   = 20; //SERVO FLEX REGION 
+const uint8_t WHEEL_THRESHOLD   = 15; //SERVO FLEX REGION 
 
 #define USE_CURVED_THROTT
 #define USE_CURVED_TURN
@@ -170,8 +170,8 @@ void loop()
     #endif
     
     #ifdef USE_CURVED_THROTT
-        fForwardSpeed   = THROTTCALU(fForwardSpeed);
-        fTurnSpeed      = CURVECALU(fTurnSpeed);
+        fForwardSpeed   = THROTTCALU(fForwardSpeed) * 10.0;
+        fTurnSpeed      = CURVECALU(fTurnSpeed) * 10.0;
     #endif
 
     vServoTurn(fForwardSpeed, fTurnSpeed);
