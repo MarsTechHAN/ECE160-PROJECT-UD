@@ -2,6 +2,7 @@
 #include <Arduino.h>
 #include <Servo.h>
 #include "PS2X_lib.h" 
+//#include "IRLremote.h"
 /*=================INC FILE END=================*/
 
 /*================GLOBAL DEFINE=================*/
@@ -55,6 +56,10 @@ const uint8_t SERVO_RIGHT_PIN   = 12;
 
 const uint8_t SERVO_GRAP_PIN    = 11;
 
+#ifdef USE_IR_REMOTE
+    const uint8_t IR_PIN        = 9;
+#endif
+
 #ifdef USE_BLUETOOTH_JOYSTICK
     const uint8_t PS2X_CLK      = 5;
     const uint8_t PS2X_CMD      = 3;
@@ -75,6 +80,8 @@ Servo servoG;
     int8_t CALI_ZERO_RX = 0;
     int8_t CALI_ZERO_RY = 0;
 #endif
+
+CNec IRLremote;
 /*============INSTANLIZATION END===================*/
 
 /*==============INIT FUNCTION======================*/
@@ -146,6 +153,10 @@ void setup()
         }
         vBLEJoystickCalib();
     #endif
+
+    #ifdef USE_IR_REMOTE
+        IRLremote.begin(IR_PIN);
+    #endif
     
 }
 
@@ -169,6 +180,16 @@ void loop()
         }
     #endif
     
+    #ifdef USE_IR_REMOTE
+        if(IRLremote.available())
+        {
+            auto data = IRLremote.read();
+            unit32_t u32IrCmd = data.command;
+            DEBUG_PRINT(String("IR REMOTE COMMAND: ") + String(u32IrCmd));
+        }
+
+    #endif
+
     #ifdef USE_CURVED_THROTT
         fForwardSpeed   = THROTTCALU(fForwardSpeed) * 10.0;
         fTurnSpeed      = CURVECALU(fTurnSpeed) * 10.0;
