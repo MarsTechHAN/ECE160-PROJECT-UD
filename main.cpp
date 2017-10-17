@@ -1,8 +1,8 @@
 /*====================INC FILE==================*/
 #include <Arduino.h>
 #include <Servo.h>
-#include <PS2X_lib.h>
-#include <IRLremote.h>
+
+
 /*=================INC FILE END=================*/
 
 /*================GLOBAL DEFINE=================*/
@@ -21,6 +21,14 @@ const uint8_t WHEEL_THRESHOLD   = 15; //SERVO FLEX REGION
 //#define ENABLE_AUTO_MODE
 
 #define EN_DEBUG
+
+#ifdef USE_IR_REMOTE
+    #include <IRLremote.h>
+#endif
+
+#ifdef USE_BLUETOOTH_JOYSTICK
+    #include <PS2X_lib.h> 
+#endif
 
 #ifdef EN_DEBUG
     #define DEBUG_PRINT(str) \
@@ -87,7 +95,10 @@ Servo servoG;
     int8_t CALI_ZERO_RY = 0;
 #endif
 
-CNec IRLremote;
+#ifdef USE_IR_REMOTE
+    CNec IRLremote;
+#endif
+
 /*============INSTANLIZATION END===================*/
 
 /*==============INIT FUNCTION======================*/
@@ -146,7 +157,6 @@ void setup()
     Serial.begin(115200);
     DEBUG_PRINT("PROGRAM START, BANDRATE INIT TO 115200");
     
-    
     vInitServo();
 
     #ifdef USE_BLUETOOTH_JOYSTICK
@@ -179,8 +189,19 @@ void loop()
 {
     #ifdef USE_BLUETOOTH_JOYSTICK
         ps2x.read_gamepad(); 
-        fForwardSpeed = float(128 - (CALI_ZERO_LY + ps2x.Analog(PSS_LY))) / 512;
-        fTurnSpeed = (float((CALI_ZERO_RX + ps2x.Analog(PSS_RX) - 128)) / 256);
+
+        #ifdef USE_CURVED_THROTT
+            fForwardSpeed = THROTTCALU(128 - (CALI_ZERO_LY + ps2x.Analog(PSS_LY))) / 512;
+        #else
+            fForwardSpeed = float(128 - (CALI_ZERO_LY + ps2x.Analog(PSS_LY))) / 512;
+        #endif
+
+        #ifdef USE_CURVED_TURN
+            fTurnSpeed = CURVECALU(CALI_ZERO_RX + ps2x.Analog(PSS_RX) - 128) / 256);
+        #else
+            fTurnSpeed = (float((CALI_ZERO_RX + ps2x.Analog(PSS_RX) - 128)) / 256);
+        #endif
+
         if(fTurnSpeed < 0.1){
             fForwardSpeed *= 2;
         }
@@ -235,18 +256,15 @@ void loop()
 
     #endif
 
-    #ifdef USE_CURVED_THROTT
-        fForwardSpeed   = THROTTCALU(fForwardSpeed) * 10.0;
-        fTurnSpeed      = CURVECALU(fTurnSpeed) * 10.0;
-    #endif
-
     vServoTurn(fForwardSpeed, fTurnSpeed);
+    
     if(true == bIsGrab){
         vServoGrab();
     }else{
         vServoDegrab();
     }
-    /*DEBUG_PRINT(String("Forward Speed: ") + String(fForwardSpeed) + 
+
+    DEBUG_PRINT(String("Forward Speed: ") + String(fForwardSpeed) + 
                         String(" TurnSpeed: ") + String(fTurnSpeed) + 
-                            String(" Grab Stuatus: ") + String(bIsGrab));*/
+                            String(" Grab Stuatus: ") + String(bIsGrab));
 }
