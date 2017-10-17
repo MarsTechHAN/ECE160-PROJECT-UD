@@ -1,8 +1,8 @@
 /*====================INC FILE==================*/
 #include <Arduino.h>
 #include <Servo.h>
-#include "PS2X_lib.h" 
-//#include "IRLremote.h"
+#include <PS2X_lib.h>
+#include <IRLremote.h>
 /*=================INC FILE END=================*/
 
 /*================GLOBAL DEFINE=================*/
@@ -10,12 +10,12 @@ const float SERVO_CALI = 93.0; //SERVO MID POINT CALI NUMBER
 
 const uint8_t WHEEL_THRESHOLD   = 15; //SERVO FLEX REGION 
 
-#define USE_CURVED_THROTT
-#define USE_CURVED_TURN
+//#define USE_CURVED_THROTT
+//#define USE_CURVED_TURN
 
-#define USE_BLUETOOTH_JOYSTICK
+//#define USE_BLUETOOTH_JOYSTICK
 //#define USE_LORA_JOYSTICK
-//#define USE_IR_REMOTE
+#define USE_IR_REMOTE
 //#define USE_NRF24_JOYSTICK
 
 //#define ENABLE_AUTO_MODE
@@ -57,14 +57,20 @@ const uint8_t SERVO_RIGHT_PIN   = 12;
 const uint8_t SERVO_GRAP_PIN    = 11;
 
 #ifdef USE_IR_REMOTE
-    const uint8_t IR_PIN        = 9;
+    const uint8_t IR_PIN        = 2;
+    const uint32_t UP_ID        = 70;
+    const uint32_t LEFT_ID      = 68;
+    const uint32_t DOWN_ID      = 21;
+    const uint32_t RIGHT_ID     = 67;
+    const uint32_t GRAB_ID      = 69;
+    const uint32_t DEGRAB_ID    = 71;
 #endif
 
 #ifdef USE_BLUETOOTH_JOYSTICK
     const uint8_t PS2X_CLK      = 5;
     const uint8_t PS2X_CMD      = 3;
     const uint8_t PS2X_ATT      = 4;
-    const uint8_t PS2X_DAT      = 2;
+    const uint8_t PS2X_DAT      = 6;
 #endif
 /*===============PIN DEFINE END==================*/
 
@@ -155,20 +161,26 @@ void setup()
     #endif
 
     #ifdef USE_IR_REMOTE
-        IRLremote.begin(IR_PIN);
+        if(!IRLremote.begin(IR_PIN)){
+            DEBUG_PRINT("INVAILD PIN SELETED FOR IR_PIN");
+        }
     #endif
     
 }
 
 uint64_t u64SysTick = 0;
 bool bIsGrab = false;
+float fForwardSpeed = 0.0;
+float fTurnSpeed = 0.0;
+uint32_t u32IrCmd = 0;
+uint32_t cnt = 0;
 
 void loop()
 {
     #ifdef USE_BLUETOOTH_JOYSTICK
         ps2x.read_gamepad(); 
-        float fForwardSpeed = float(128 - (CALI_ZERO_LY + ps2x.Analog(PSS_LY))) / 512;
-        float fTurnSpeed = (float((CALI_ZERO_RX + ps2x.Analog(PSS_RX) - 128)) / 256);
+        fForwardSpeed = float(128 - (CALI_ZERO_LY + ps2x.Analog(PSS_LY))) / 512;
+        fTurnSpeed = (float((CALI_ZERO_RX + ps2x.Analog(PSS_RX) - 128)) / 256);
         if(fTurnSpeed < 0.1){
             fForwardSpeed *= 2;
         }
@@ -184,8 +196,41 @@ void loop()
         if(IRLremote.available())
         {
             auto data = IRLremote.read();
-            unit32_t u32IrCmd = data.command;
-            DEBUG_PRINT(String("IR REMOTE COMMAND: ") + String(u32IrCmd));
+            u32IrCmd = data.command;
+            process_ir_non_zero:
+            if(0 != u32IrCmd){
+                DEBUG_PRINT(String("IR REMOTE COMMAND: ") + String(u32IrCmd));
+                switch(u32IrCmd){
+                    case UP_ID:
+                        fForwardSpeed = 1.0;
+                        fTurnSpeed = 0.0;
+                        break;
+                    case LEFT_ID:
+                        fTurnSpeed = -1.0;
+                        fForwardSpeed = 0.0;
+                        break;
+                    case DOWN_ID:
+                        fForwardSpeed = -1.0;
+                        fTurnSpeed = 0.0;
+                        break;
+                    case RIGHT_ID:
+                        fTurnSpeed = 1.0;
+                        fForwardSpeed = 0.0;
+                        break;
+                    case GRAB_ID:
+                         bIsGrab = true;
+                         break;
+                    case DEGRAB_ID:
+                         bIsGrab = false;
+                         break;
+                    default:
+                        fTurnSpeed = 0.0;
+                        fForwardSpeed = 0.0;
+                        break;
+                }
+            }else{
+                DEBUG_PRINT("IR REMOTE CONTINUE");
+            }
         }
 
     #endif
@@ -201,7 +246,7 @@ void loop()
     }else{
         vServoDegrab();
     }
-    DEBUG_PRINT(String("Forward Speed: ") + String(fForwardSpeed) + 
+    /*DEBUG_PRINT(String("Forward Speed: ") + String(fForwardSpeed) + 
                         String(" TurnSpeed: ") + String(fTurnSpeed) + 
-                            String(" Grab Stuatus: ") + String(bIsGrab));
+                            String(" Grab Stuatus: ") + String(bIsGrab));*/
 }

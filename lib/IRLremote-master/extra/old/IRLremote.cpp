@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2014-2017 NicoHood
+Copyright (c) 2014-2015 NicoHood
 See the readme for credit to other people.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,37 +21,31 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-// Include guard
-#pragma once
+#include "IRLremote.h"
 
-// IDE version check
-#if ARDUINO < 10606
-#error IRLremote requires Arduino IDE 1.6.6 or greater. Please update your IDE.
-#endif
+//================================================================================
+// Static Data
+//================================================================================
 
-// Software version
-#define IRL_VERSION 200
+// Protocol temporary data
+uint8_t Nec::countNec = 0;
+uint8_t Nec::dataNec[NEC_BLOCKS] = { 0 };
+volatile uint8_t Nec::protocol = IR_NO_PROTOCOL;
+uint32_t Nec::lastTime = 0;
+volatile uint32_t Nec::lastEvent = 0;
 
-// Include PinChangeInterrupt library if available
-#ifdef PCINT_VERSION
-#include "PinChangeInterrupt.h"
-#endif
 
-// Delay_basic is only for avrs. With ARM sending is currently not possible
-// TODO implement sending
-#ifdef ARDUINO_ARCH_AVR
-#include <util/delay_basic.h>
-#endif
+uint8_t Panasonic::countPanasonic = 0;
+uint8_t Panasonic::dataPanasonic[PANASONIC_BLOCKS] = { 0 };
+uint8_t Sony::countSony = 0;
+uint8_t Sony::dataSony[SONY_BLOCKS_12] = { 0 };
+volatile RAWIR_DATA_T RawIR::countRawIR = 0;
+volatile uint16_t RawIR::dataRawIR[RAWIR_BLOCKS] = { 0 };
+uint16_t HashIR::durationHashIR = 0;
+uint16_t HashIR::countHashIR = 0;
+uint32_t HashIR::commandHashIR = FNV_BASIS_32;
 
-// Include external libraries
-#include <Arduino.h>
-#include <util/atomic.h>
-
-// Include all protocol implementations
-#include "IRL_Nec.h"
-#include "IRL_NecAPI.h"
-#include "IRL_Panasonic.h"
-#include "IRL_Hash.h"
-
-// Include pre recorded IR codes from IR remotes
-#include "IRL_Keycodes.h"
+// Main/shared remote data
+volatile uint8_t CIRLData::IRLProtocol = IR_NO_PROTOCOL;
+uint32_t CIRLData::IRLLastTime = 0;
+volatile uint32_t CIRLData::IRLLastEvent = 0;
