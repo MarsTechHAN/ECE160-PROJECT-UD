@@ -216,35 +216,35 @@ void loop()
         }
 
         if(true == ps2x.Button(PSB_PAD_LEFT)){
-            fTurnSpeed = -260.0;
+            fTurnSpeed = -1.0;
         }
 
         if(true == ps2x.Button(PSB_PAD_RIGHT)){
-            fTurnSpeed = 260.0;
+            fTurnSpeed = 1.0;
         }
 
         if(true == ps2x.Button(PSB_PAD_UP)){
-            fForwardSpeed = 255.0;
+            fForwardSpeed = 1.0;
         }
 
         if(true == ps2x.Button(PSB_PAD_DOWN)){
-            fForwardSpeed = -255.0;
+            fForwardSpeed = -1.0;
         }
 
         if(true == ps2x.Button(PSB_TRIANGLE)){
-            fForwardSpeed = 10.0;
+            fForwardSpeed = 0.1;
         }
         
         if(true == ps2x.Button(PSB_CROSS)){
-            fForwardSpeed = -10.0;
+            fForwardSpeed = -0.1;
         }
         
         if(true == ps2x.Button(PSB_SQUARE)){
-            fTurnSpeed = -10.0;
+            fTurnSpeed = -0.1;
         }
         
         if(true == ps2x.Button(PSB_CIRCLE)){
-            fTurnSpeed = 10.0;
+            fTurnSpeed = 0.1;
         }
     #endif
     
