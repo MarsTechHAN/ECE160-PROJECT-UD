@@ -76,7 +76,7 @@ const uint8_t SERVO_GRAP_PIN    = 11;
 
 #ifdef USE_BLUETOOTH_JOYSTICK
     const uint8_t PS2X_CLK      = 5;
-    const uint8_t PS2X_CMD      = 3;
+    const uint8_t PS2X_CMD      = 7;
     const uint8_t PS2X_ATT      = 4;
     const uint8_t PS2X_DAT      = 6;
 #endif
