@@ -214,6 +214,22 @@ void loop()
         if(true == ps2x.Button(PSB_R1)){
             bIsGrab = true;
         }
+
+        if(true == ps2x.Button(PSB_PAD_LEFT)){
+            fTurnSpeed = 255.0;
+        }
+
+        if(true == ps2x.Button(PSB_PAD_RIGHT)){
+            fTurnSpeed = -255.0;
+        }
+
+        if(true == ps2x.Button(PSB_PAD_UP)){
+            fForwardSpeed = 255.0;
+        }
+
+        if(true == ps2x.Button(PSB_PAD_DOWN)){
+            fForwardSpeed = -255.0;
+        }
     #endif
     
     #ifdef USE_IR_REMOTE
