@@ -8,14 +8,14 @@
 /*================GLOBAL DEFINE=================*/
 const float SERVO_CALI = 93.0; //SERVO MID POINT CALI NUMBER
 
-const uint8_t WHEEL_THRESHOLD   = 15; //SERVO FLEX REGION 
+const uint8_t WHEEL_THRESHOLD   = 20; //SERVO FLEX REGION 
 
-//#define USE_CURVED_THROTT
-//#define USE_CURVED_TURN
+#define USE_CURVED_THROTT
+#define USE_CURVED_TURN
 
-//#define USE_BLUETOOTH_JOYSTICK
+#define USE_BLUETOOTH_JOYSTICK
 //#define USE_LORA_JOYSTICK
-#define USE_IR_REMOTE
+//#define USE_IR_REMOTE
 //#define USE_NRF24_JOYSTICK
 
 //#define ENABLE_AUTO_MODE
@@ -46,11 +46,11 @@ const uint8_t WHEEL_THRESHOLD   = 15; //SERVO FLEX REGION
 #endif
 
 #ifdef USE_CURVED_THROTT
-    #define THROTTCALU(x) (6.0*pow(10.0, -5)*((x) * (x) * (x)) + double(0.1916)*(x))
+    #define THROTTCALU(x) (3.0*pow(10.0, -5)*((x) * (x) * (x)) + double(0.1916)*(x))
 #endif
 
 #ifdef USE_CURVED_TURN
-    #define CURVECALU(x) (6.0*pow(10.0, -5)*((x) * (x) * (x)) + double(0.1916)*(x))
+    #define CURVECALU(x) (3.0*pow(10.0, -5)*((x) * (x) * (x)) + double(0.1916)*(x))
 #endif
 
 #ifndef ENABLE_AUTO_MODE
@@ -180,8 +180,8 @@ void setup()
 
 uint64_t u64SysTick = 0;
 bool bIsGrab = false;
-float fForwardSpeed = 0.0;
-float fTurnSpeed = 0.0;
+double fForwardSpeed = 0.0;
+double fTurnSpeed = 0.0;
 uint32_t u32IrCmd = 0;
 uint32_t cnt = 0;
 
@@ -191,19 +191,22 @@ void loop()
         ps2x.read_gamepad(); 
 
         #ifdef USE_CURVED_THROTT
-            fForwardSpeed = THROTTCALU(128 - (CALI_ZERO_LY + ps2x.Analog(PSS_LY))) / 512;
+            fForwardSpeed = THROTTCALU(double(128 - (CALI_ZERO_LY + ps2x.Analog(PSS_LY)))) / 512.0;
         #else
             fForwardSpeed = float(128 - (CALI_ZERO_LY + ps2x.Analog(PSS_LY))) / 512;
         #endif
 
         #ifdef USE_CURVED_TURN
-            fTurnSpeed = CURVECALU(CALI_ZERO_RX + ps2x.Analog(PSS_RX) - 128) / 256);
+            fTurnSpeed = CURVECALU(double(CALI_ZERO_RX + ps2x.Analog(PSS_RX) - 128)) / 384.0;
         #else
-            fTurnSpeed = (float((CALI_ZERO_RX + ps2x.Analog(PSS_RX) - 128)) / 256);
+            fTurnSpeed = float((CALI_ZERO_RX + ps2x.Analog(PSS_RX) - 128)) / 384;
         #endif
 
         if(fTurnSpeed < 0.1){
             fForwardSpeed *= 2;
+        }
+        if(fForwardSpeed < 0.1){
+            fTurnSpeed    *= 2;
         }
         if(true == ps2x.Button(PSB_L1)){
             bIsGrab = false;
@@ -227,7 +230,7 @@ void loop()
                         fTurnSpeed = 0.0;
                         break;
                     case LEFT_ID:
-                        fTurnSpeed = -1.0;
+                        fTurnSpeed = -0.3;
                         fForwardSpeed = 0.0;
                         break;
                     case DOWN_ID:
@@ -235,7 +238,7 @@ void loop()
                         fTurnSpeed = 0.0;
                         break;
                     case RIGHT_ID:
-                        fTurnSpeed = 1.0;
+                        fTurnSpeed = 0.3;
                         fForwardSpeed = 0.0;
                         break;
                     case GRAB_ID:
