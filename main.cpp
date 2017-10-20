@@ -6,12 +6,13 @@
 /*=================INC FILE END=================*/
 
 /*================GLOBAL DEFINE=================*/
-const float SERVO_CALI = 93.0; //SERVO MID POINT CALI NUMBER
+const float SERVO_CALI_L = 90.0; //SERVO MID POINT CALI NUMBER
+const float SERVO_CALI_R = 90.0; //SERVO MID POINT CALI NUMBER
 
-const uint8_t WHEEL_THRESHOLD   = 20; //SERVO FLEX REGION 
+const uint8_t WHEEL_THRESHOLD   = 10; //SERVO FLEX REGION 
 
-#define USE_CURVED_THROTT
-#define USE_CURVED_TURN
+//#define USE_CURVED_THROTT
+//#define USE_CURVED_TURN
 
 #define USE_BLUETOOTH_JOYSTICK
 //#define USE_LORA_JOYSTICK
@@ -111,23 +112,27 @@ void vInitServo(){
 
 /*==============SERVO CLASS========================*/
 void vServoForward(float speed){
-    servoL.write(SERVO_CALI + speed * WHEEL_THRESHOLD);
-    servoR.write(SERVO_CALI - speed * WHEEL_THRESHOLD );
+    servoL.write(SERVO_CALI_L + speed * WHEEL_THRESHOLD);
+    servoR.write(SERVO_CALI_R - speed * WHEEL_THRESHOLD );
 }
 
 void vServoBackward(float speed){
-    servoL.write(SERVO_CALI - speed * WHEEL_THRESHOLD);
-    servoR.write(SERVO_CALI + speed * WHEEL_THRESHOLD );
+    servoL.write(SERVO_CALI_L - speed * WHEEL_THRESHOLD);
+    servoR.write(SERVO_CALI_R + speed * WHEEL_THRESHOLD );
 }
 
 void vServoSpin(float speed){
-    servoL.write(SERVO_CALI + speed * WHEEL_THRESHOLD);
-    servoR.write(SERVO_CALI + speed * WHEEL_THRESHOLD);
+    servoL.write(SERVO_CALI_L + speed * WHEEL_THRESHOLD);
+    servoR.write(SERVO_CALI_R + speed * WHEEL_THRESHOLD);
 }
 
 void vServoTurn(float speed, float bias){
-    servoL.write(SERVO_CALI + speed * WHEEL_THRESHOLD +  WHEEL_THRESHOLD * bias);
-    servoR.write(SERVO_CALI - speed * WHEEL_THRESHOLD +  WHEEL_THRESHOLD * bias);
+    if(speed + bias > 1){
+        speed *= 1.0/(speed+bias);
+        speed *= 1.0/(speed+bias);
+    }
+    servoL.write(SERVO_CALI_L + speed * WHEEL_THRESHOLD +  WHEEL_THRESHOLD * bias);
+    servoR.write(SERVO_CALI_R - speed * WHEEL_THRESHOLD +  WHEEL_THRESHOLD * bias);
 }
 
 void vServoGrab(){
@@ -193,21 +198,15 @@ void loop()
         #ifdef USE_CURVED_THROTT
             fForwardSpeed = THROTTCALU(double(128 - (CALI_ZERO_LY + ps2x.Analog(PSS_LY)))) / 512.0;
         #else
-            fForwardSpeed = float(128 - (CALI_ZERO_LY + ps2x.Analog(PSS_LY))) / 512;
+            fForwardSpeed = float(128 - (CALI_ZERO_LY + ps2x.Analog(PSS_LY))) / 128.0;
         #endif
 
         #ifdef USE_CURVED_TURN
             fTurnSpeed = CURVECALU(double(CALI_ZERO_RX + ps2x.Analog(PSS_RX) - 128)) / 384.0;
         #else
-            fTurnSpeed = float((CALI_ZERO_RX + ps2x.Analog(PSS_RX) - 128)) / 384;
+            fTurnSpeed = float((CALI_ZERO_RX + ps2x.Analog(PSS_RX) - 128)) / 128.0;
         #endif
 
-        if(fTurnSpeed < 0.1){
-            fForwardSpeed *= 2;
-        }
-        if(fForwardSpeed < 0.1){
-            fTurnSpeed    *= 2;
-        }
         if(true == ps2x.Button(PSB_L1)){
             bIsGrab = false;
         }
@@ -215,37 +214,6 @@ void loop()
             bIsGrab = true;
         }
 
-        if(true == ps2x.Button(PSB_PAD_LEFT)){
-            fTurnSpeed = -1.0;
-        }
-
-        if(true == ps2x.Button(PSB_PAD_RIGHT)){
-            fTurnSpeed = 1.0;
-        }
-
-        if(true == ps2x.Button(PSB_PAD_UP)){
-            fForwardSpeed = 1.0;
-        }
-
-        if(true == ps2x.Button(PSB_PAD_DOWN)){
-            fForwardSpeed = -1.0;
-        }
-
-        if(true == ps2x.Button(PSB_TRIANGLE)){
-            fForwardSpeed = 0.1;
-        }
-        
-        if(true == ps2x.Button(PSB_CROSS)){
-            fForwardSpeed = -0.1;
-        }
-        
-        if(true == ps2x.Button(PSB_SQUARE)){
-            fTurnSpeed = -0.1;
-        }
-        
-        if(true == ps2x.Button(PSB_CIRCLE)){
-            fTurnSpeed = 0.1;
-        }
     #endif
     
     #ifdef USE_IR_REMOTE
