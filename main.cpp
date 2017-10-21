@@ -231,7 +231,7 @@ void loop()
             #ifdef USE_CURVED_TURN
                 fRightSpeed = CURVECALU(double(CALI_ZERO_RX + ps2x.Analog(PSS_RY) - 128)) / 384.0;
             #else
-                fRightSpeed = float((CALI_ZERO_RX + ps2x.Analog(PSS_RY) - 128)) / 128.0;
+                fRightSpeed = float(128 - (CALI_ZERO_RX + ps2x.Analog(PSS_RY) )) / 128.0;
             #endif
         #endif
 
