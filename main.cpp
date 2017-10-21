@@ -6,8 +6,11 @@
 /*=================INC FILE END=================*/
 
 /*================GLOBAL DEFINE=================*/
-const float SERVO_CALI_L = 90.0; //SERVO MID POINT CALI NUMBER
-const float SERVO_CALI_R = 90.0; //SERVO MID POINT CALI NUMBER
+const float SERVO_CALI_L = 93.0; //SERVO MID POINT CALI NUMBER
+const float SERVO_CALI_R = 93.0; //SERVO MID POINT CALI NUMBER
+
+const float SERVO_MAGIC_L = 0.995;
+const float SERVO_MAGIC_R = 0.98;
 
 const uint8_t WHEEL_THRESHOLD   = 10; //SERVO FLEX REGION 
 
@@ -20,6 +23,8 @@ const uint8_t WHEEL_THRESHOLD   = 10; //SERVO FLEX REGION
 //#define USE_NRF24_JOYSTICK
 
 //#define ENABLE_AUTO_MODE
+
+#define ENABLE_FRC_JOYSTICK_MODE
 
 #define EN_DEBUG
 
@@ -131,8 +136,13 @@ void vServoTurn(float speed, float bias){
         speed *= 1.0/(speed+bias);
         speed *= 1.0/(speed+bias);
     }
-    servoL.write(SERVO_CALI_L + speed * WHEEL_THRESHOLD +  WHEEL_THRESHOLD * bias);
-    servoR.write(SERVO_CALI_R - speed * WHEEL_THRESHOLD +  WHEEL_THRESHOLD * bias);
+    servoL.write(SERVO_CALI_L + speed * WHEEL_THRESHOLD * SERVO_MAGIC_L +  WHEEL_THRESHOLD * bias);
+    servoR.write(SERVO_CALI_R - speed * WHEEL_THRESHOLD * SERVO_MAGIC_R +  WHEEL_THRESHOLD * bias * SERVO_MAGIC_R);
+}
+
+void vServoDual(float fServoLeft, float fServoRight){
+    servoL.write(SERVO_CALI_L + fServoLeft * WHEEL_THRESHOLD * SERVO_MAGIC_L);
+    servoR.write(SERVO_CALI_R - fServoRight * WHEEL_THRESHOLD * SERVO_MAGIC_R);
 }
 
 void vServoGrab(){
@@ -185,26 +195,44 @@ void setup()
 
 uint64_t u64SysTick = 0;
 bool bIsGrab = false;
-double fForwardSpeed = 0.0;
-double fTurnSpeed = 0.0;
+float fForwardSpeed = 0.0;
+float fTurnSpeed = 0.0;
 uint32_t u32IrCmd = 0;
 uint32_t cnt = 0;
+#ifdef ENABLE_FRC_JOYSTICK_MODE
+    float fLeftSpeed = 0.0;
+    float fRightSpeed = 0.0;
+#endif
 
 void loop()
 {
     #ifdef USE_BLUETOOTH_JOYSTICK
         ps2x.read_gamepad(); 
 
-        #ifdef USE_CURVED_THROTT
-            fForwardSpeed = THROTTCALU(double(128 - (CALI_ZERO_LY + ps2x.Analog(PSS_LY)))) / 512.0;
-        #else
-            fForwardSpeed = float(128 - (CALI_ZERO_LY + ps2x.Analog(PSS_LY))) / 128.0;
-        #endif
+        #ifndef ENABLE_FRC_JOYSTICK_MODE
+            #ifdef USE_CURVED_THROTT
+                fForwardSpeed = THROTTCALU(double(128 - (CALI_ZERO_LY + ps2x.Analog(PSS_LY)))) / 512.0;
+            #else
+                fForwardSpeed = float(128 - (CALI_ZERO_LY + ps2x.Analog(PSS_LY))) / 128.0;
+            #endif
 
-        #ifdef USE_CURVED_TURN
-            fTurnSpeed = CURVECALU(double(CALI_ZERO_RX + ps2x.Analog(PSS_RX) - 128)) / 384.0;
+            #ifdef USE_CURVED_TURN
+                fTurnSpeed = CURVECALU(double(CALI_ZERO_RX + ps2x.Analog(PSS_RX) - 128)) / 384.0;
+            #else
+                fTurnSpeed = float((CALI_ZERO_RX + ps2x.Analog(PSS_RX) - 128)) / 256.0;
+            #endif
         #else
-            fTurnSpeed = float((CALI_ZERO_RX + ps2x.Analog(PSS_RX) - 128)) / 128.0;
+            #ifdef USE_CURVED_THROTT
+                fLeftSpeed = THROTTCALU(double(128 - (CALI_ZERO_LY + ps2x.Analog(PSS_LY)))) / 512.0;
+            #else
+                fLeftSpeed = float(128 - (CALI_ZERO_LY + ps2x.Analog(PSS_LY))) / 128.0;
+            #endif
+
+            #ifdef USE_CURVED_TURN
+                fRightSpeed = CURVECALU(double(CALI_ZERO_RX + ps2x.Analog(PSS_RY) - 128)) / 384.0;
+            #else
+                fRightSpeed = float((CALI_ZERO_RX + ps2x.Analog(PSS_RY) - 128)) / 128.0;
+            #endif
         #endif
 
         if(true == ps2x.Button(PSB_L1)){
@@ -258,8 +286,17 @@ void loop()
         }
 
     #endif
-
-    vServoTurn(fForwardSpeed, fTurnSpeed);
+    if(0.05 >= abs(fForwardSpeed) && (0.05 >=abs(fTurnSpeed))){
+        vServoDual(fLeftSpeed, fRightSpeed);
+        DEBUG_PRINT(String("Left Speed: ") + String(fLeftSpeed) + 
+        String("   Right Speed: ") + String(fRightSpeed) + 
+            String(" Grab Stuatus: ") + String(bIsGrab));
+    }else{
+        vServoTurn(fForwardSpeed, fTurnSpeed);
+        DEBUG_PRINT(String("Forward Speed: ") + String(fForwardSpeed) + 
+        String(" TurnSpeed: ") + String(fTurnSpeed) + 
+            String(" Grab Stuatus: ") + String(bIsGrab));
+    }
     
     if(true == bIsGrab){
         vServoGrab();
@@ -267,7 +304,4 @@ void loop()
         vServoDegrab();
     }
 
-    DEBUG_PRINT(String("Forward Speed: ") + String(fForwardSpeed) + 
-                        String(" TurnSpeed: ") + String(fTurnSpeed) + 
-                            String(" Grab Stuatus: ") + String(bIsGrab));
 }
