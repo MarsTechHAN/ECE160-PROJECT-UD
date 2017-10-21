@@ -9,8 +9,7 @@
 const float SERVO_CALI_L = 93.0; //SERVO MID POINT CALI NUMBER
 const float SERVO_CALI_R = 93.0; //SERVO MID POINT CALI NUMBER
 
-const float SERVO_MAGIC_L = 0.995;
-const float SERVO_MAGIC_R = 0.98;
+const float SERVO_MAGIC = 0.98;
 
 const uint8_t WHEEL_THRESHOLD   = 10; //SERVO FLEX REGION 
 
@@ -136,13 +135,13 @@ void vServoTurn(float speed, float bias){
         speed *= 1.0/(speed+bias);
         speed *= 1.0/(speed+bias);
     }
-    servoL.write(SERVO_CALI_L + speed * WHEEL_THRESHOLD * SERVO_MAGIC_L +  WHEEL_THRESHOLD * bias);
-    servoR.write(SERVO_CALI_R - speed * WHEEL_THRESHOLD * SERVO_MAGIC_R +  WHEEL_THRESHOLD * bias * SERVO_MAGIC_R);
+    servoL.write(SERVO_CALI_L + speed * WHEEL_THRESHOLD * SERVO_MAGIC +  WHEEL_THRESHOLD * bias);
+    servoR.write(SERVO_CALI_R - speed * WHEEL_THRESHOLD * (speed>0?(SERVO_MAGIC):(1.0/SERVO_MAGIC)) +  WHEEL_THRESHOLD * bias * (speed>0?(SERVO_MAGIC):(1.0/SERVO_MAGIC)));
 }
 
 void vServoDual(float fServoLeft, float fServoRight){
-    servoL.write(SERVO_CALI_L + fServoLeft * WHEEL_THRESHOLD * SERVO_MAGIC_L);
-    servoR.write(SERVO_CALI_R - fServoRight * WHEEL_THRESHOLD * SERVO_MAGIC_R);
+    servoL.write(SERVO_CALI_L + fServoLeft * WHEEL_THRESHOLD);
+    servoR.write(SERVO_CALI_R - fServoRight * WHEEL_THRESHOLD * (fServoRight>0?(SERVO_MAGIC):(1.0/SERVO_MAGIC)));
 }
 
 void vServoGrab(){
@@ -240,6 +239,46 @@ void loop()
         }
         if(true == ps2x.Button(PSB_R1)){
             bIsGrab = true;
+        }
+
+        if(true == ps2x.Button(PSB_PAD_UP)){
+            fLeftSpeed = 1.0;
+            fRightSpeed = 1.0;
+        }
+
+        if(true == ps2x.Button(PSB_PAD_DOWN)){
+            fLeftSpeed  = -1.0;
+            fRightSpeed = -1.0;
+        }
+
+        if(true == ps2x.Button(PSB_PAD_LEFT)){
+            fLeftSpeed  = -1.0;
+            fRightSpeed =  1.0;
+        }
+
+        if(true == ps2x.Button(PSB_PAD_RIGHT)){
+            fLeftSpeed  =  1.0;
+            fRightSpeed = -1.0;
+        }
+
+        if(true == ps2x.Button(PSB_TRIANGLE)){
+            fLeftSpeed  = 0.2;
+            fRightSpeed = 0.2;
+        }
+
+        if(true == ps2x.Button(PSB_CROSS)){
+            fLeftSpeed  = -0.2;
+            fRightSpeed = -0.2;
+        }
+
+        if(true == ps2x.Button(PSB_SQUARE)){
+            fLeftSpeed  = -0.2;
+            fRightSpeed =  0.2;
+        }
+
+        if(true == ps2x.Button(PSB_CIRCLE)){
+            fLeftSpeed  =  0.2;
+            fRightSpeed = -0.2;
         }
 
     #endif
