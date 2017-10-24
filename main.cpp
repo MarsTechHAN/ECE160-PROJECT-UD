@@ -106,9 +106,11 @@ Servo servoG;
 #endif
 
 #ifdef ENABLE_FAKE_AUTO_MODE
-    int64_t timeInterval[]    = {1000 ,160  ,-1   ,500  ,550  ,8000, 160, 500, 350};
-    float speedInterval[]     = {1.0  ,0.0  ,0.5  ,0.0  ,0.0  ,1.0, 0.0,  1.0, -1};
-    float turnInterval[]      = {0.0  ,-0.5 ,0.0  ,0.0  ,-1  ,0 , -0.5,  0.0, 0.0};
+    //int64_t timeInterval[]    = {1000 ,160  ,-1   ,500  ,550  ,8000, 160, 500, 350};
+    int64_t timeInterval[]    = {3600 ,2000 ,400  ,-1   ,500  ,1600  ,8000, 240, 500, 350}; //for right one
+    float speedInterval[]     = {1.0  ,-1.0, 0.0  ,0.2  ,0.0  ,0.0  ,1.0, 0.0,  1.0, -0.5};
+    //float turnInterval[]      = {0.0  ,-0.5 ,0.0  ,0.0  ,-1  ,0 , -0.5,  0.0, 0.0};
+    float turnInterval[]      = {0.0  ,0.0, 0.5 ,0.0  ,0.0  ,1  ,0 , -0.5,  0.0, 0.0};
 #endif
 
 uint64_t u64SysTick = 0;
@@ -241,7 +243,12 @@ void setup()
                     }
             }
         }
+        vServoGrab();
         vServoDegrab();
+        vServoDegrab();
+        vServoDegrab();
+        vServoDegrab();
+        delay(1000);
         fForwardSpeed = 0.0;
         fTurnSpeed = 0.0;
         vServoDegrab();
