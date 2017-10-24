@@ -22,6 +22,7 @@ const uint8_t WHEEL_THRESHOLD   = 10; //SERVO FLEX REGION
 //#define USE_NRF24_JOYSTICK
 
 //#define ENABLE_AUTO_MODE
+#define ENABLE_FAKE_AUTO_MODE
 
 #define ENABLE_FRC_JOYSTICK_MODE
 
@@ -104,6 +105,18 @@ Servo servoG;
     CNec IRLremote;
 #endif
 
+#ifdef ENABLE_FAKE_AUTO_MODE
+    int64_t timeInterval[]    = {1000 ,160  ,-1   ,500  ,550  ,8000, 160, 500, 350};
+    float speedInterval[]     = {1.0  ,0.0  ,0.5  ,0.0  ,0.0  ,1.0, 0.0,  1.0, -1};
+    float turnInterval[]      = {0.0  ,-0.5 ,0.0  ,0.0  ,-1  ,0 , -0.5,  0.0, 0.0};
+#endif
+
+uint64_t u64SysTick = 0;
+bool bIsGrab = false;
+float fForwardSpeed = 0.0;
+float fTurnSpeed = 0.0;
+uint32_t u32IrCmd = 0;
+uint32_t cnt = 0;
 /*============INSTANLIZATION END===================*/
 
 /*==============INIT FUNCTION======================*/
@@ -151,6 +164,24 @@ void vServoGrab(){
 void vServoDegrab(){
     servoG.write(0);
 }
+
+void vWaitForTrigger(uint8_t u8PORT, uint32_t u32TRIGGER_LEVEL, int bUPLOWER){
+    uint16_t u16DAT = analogRead(u8PORT);
+    DEBUG_PRINT(String("WAIT FOR TRIG, Threshold: ") + String(u32TRIGGER_LEVEL) + String(" REALTIME DATA: ") + String(u16DAT));            
+    if(bUPLOWER == LOW){
+        while(u16DAT > u32TRIGGER_LEVEL){
+            u16DAT = analogRead(u8PORT);
+            DEBUG_PRINT(String("WAIT FOR TRIG, LEVEL: HIGH, Threshold: ") + String(u32TRIGGER_LEVEL) + String(" REALTIME DATA: ") + String(u16DAT));
+            delay(10);
+        }
+    }else{
+        while(u16DAT < u32TRIGGER_LEVEL){
+            u16DAT = analogRead(u8PORT);
+            DEBUG_PRINT(String("WAIT FOR TRIG, LEVEL: LOW, Threshold: ") + String(u32TRIGGER_LEVEL) + String(" REALTIME DATA: ") + String(u16DAT));            
+            delay(10);
+        }
+    }
+}
 /*=================SERVO CALSS END=================*/
 
 #ifdef USE_BLUETOOTH_JOYSTICK
@@ -189,15 +220,37 @@ void setup()
             DEBUG_PRINT("INVAILD PIN SELETED FOR IR_PIN");
         }
     #endif
-    
+
+    #ifdef ENABLE_FAKE_AUTO_MODE
+        vServoDegrab();
+        for(uint16_t cnt = 0; cnt < sizeof(timeInterval)/sizeof(int64_t); cnt++){
+            fForwardSpeed = speedInterval[cnt];
+            fTurnSpeed    = turnInterval[cnt];
+            vServoTurn(fForwardSpeed, fTurnSpeed);
+            switch(timeInterval[cnt]){
+                case -1:
+                    vWaitForTrigger(A0, 500, LOW);
+                    delay(200);
+                    vServoGrab();
+                    break;
+                default:
+                    if(timeInterval[cnt] < 0){
+                        break;
+                    }else{
+                        delay(timeInterval[cnt]);
+                    }
+            }
+        }
+        vServoDegrab();
+        fForwardSpeed = 0.0;
+        fTurnSpeed = 0.0;
+        vServoDegrab();
+    #endif
+        
+        
 }
 
-uint64_t u64SysTick = 0;
-bool bIsGrab = false;
-float fForwardSpeed = 0.0;
-float fTurnSpeed = 0.0;
-uint32_t u32IrCmd = 0;
-uint32_t cnt = 0;
+
 #ifdef ENABLE_FRC_JOYSTICK_MODE
     float fLeftSpeed = 0.0;
     float fRightSpeed = 0.0;
@@ -323,8 +376,12 @@ void loop()
                 DEBUG_PRINT("IR REMOTE CONTINUE");
             }
         }
-
     #endif
+
+    #ifdef ENABLE_FAKE_AUTO_MODE
+        
+    #endif
+
     if(0.05 >= abs(fForwardSpeed) && (0.05 >=abs(fTurnSpeed))){
         vServoDual(fLeftSpeed, fRightSpeed);
         DEBUG_PRINT(String("Left Speed: ") + String(fLeftSpeed) + 
