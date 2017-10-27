@@ -21,8 +21,8 @@ const uint8_t WHEEL_THRESHOLD   = 10; //SERVO FLEX REGION
 //#define USE_IR_REMOTE
 //#define USE_NRF24_JOYSTICK
 
-//#define ENABLE_AUTO_MODE
-#define ENABLE_FAKE_AUTO_MODE
+#define ENABLE_AUTO_MODE
+//#define ENABLE_FAKE_AUTO_MODE
 
 #define ENABLE_FRC_JOYSTICK_MODE
 
@@ -109,10 +109,17 @@ Servo servoG;
     //int64_t timeInterval[]    = {1000 ,160  ,-1   ,500  ,550  ,8000, 160, 500, 350};
     int64_t timeInterval[]    = {3600 ,2000 ,400  ,-1   ,500  ,1600  ,8000, 240, 500, 350}; //for right one
     float speedInterval[]     = {1.0  ,-1.0, 0.0  ,0.2  ,0.0  ,0.0  ,1.0, 0.0,  1.0, -0.5};
-    //float turnInterval[]      = {0.0  ,-0.5 ,0.0  ,0.0  ,-1  ,0 , -0.5,  0.0, 0.0};
+    //float turnInterval[]      = {0.0  ,-0.5 ,0.0  ,0.0  ,-1  ,0 , -0.5,  0.0, 0.0}; // for right one
     float turnInterval[]      = {0.0  ,0.0, 0.5 ,0.0  ,0.0  ,1  ,0 , -0.5,  0.0, 0.0};
 #endif
 
+#ifdef ENABLE_AUTO_MODE
+    const float fAutoInterval[][3] = {
+    {500, 0, 1},
+    {0,0,0}
+    
+    };
+#endif
 uint64_t u64SysTick = 0;
 bool bIsGrab = false;
 float fForwardSpeed = 0.0;
@@ -220,6 +227,16 @@ void setup()
     #ifdef USE_IR_REMOTE
         if(!IRLremote.begin(IR_PIN)){
             DEBUG_PRINT("INVAILD PIN SELETED FOR IR_PIN");
+        }
+    #endif
+
+    #ifdef ENABLE_AUTO_MODE
+        vServoDegrab();
+        for(uint8_t cnt = 0; cnt < sizeof(fAutoInterval)/sizeof(float); cnt++){
+            fForwardSpeed = fAutoInterval[cnt][1];
+            fTurnSpeed    = fAutoInterval[cnt][2];
+            vServoTurn(fForwardSpeed, fTurnSpeed);
+            delay(fAutoInterval[cnt][0]);
         }
     #endif
 
