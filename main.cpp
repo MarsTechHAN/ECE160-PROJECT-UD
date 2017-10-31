@@ -1,8 +1,6 @@
 /*====================INC FILE==================*/
 #include <Arduino.h>
 #include <Servo.h>
-
-
 /*=================INC FILE END=================*/
 
 /*================GLOBAL DEFINE=================*/
@@ -28,6 +26,7 @@ const uint8_t WHEEL_THRESHOLD   = 10; //SERVO FLEX REGION
 
 #define EN_DEBUG
 
+//==========FILE INCLUDED============
 #ifdef USE_IR_REMOTE
     #include <IRLremote.h>
 #endif
@@ -35,6 +34,8 @@ const uint8_t WHEEL_THRESHOLD   = 10; //SERVO FLEX REGION
 #ifdef USE_BLUETOOTH_JOYSTICK
     #include <PS2X_lib.h> 
 #endif
+
+//=======FILE INCLUDED END============
 
 #ifdef EN_DEBUG
     #define DEBUG_PRINT(str) \
@@ -114,10 +115,32 @@ Servo servoG;
 #endif
 
 #ifdef ENABLE_AUTO_MODE
-    const float fAutoInterval[][3] = {
+    
+    const float fAutoInterval_routin_1[][3] = {
+        {600, 0, 1 }
+        ,{1000, -1, 0}
+        ,{4000, 1, 0.17}    //first zombie
+        ,{400, 0.0, 0.4}
+        ,{1200, 1.0, 0.0}
+        ,{600, 0.0, -0.4}
+        ,{1000, 1.0, 0.0}   //second zombie
+        ,{700, 0.0, -0.3}
+        ,{1000, 0.8, 0.0}    //third zombie
+        ,{600, 1.0, -0.3}
+        ,{3000,0.8, -0.25}
+        ,{6000, 1.0, 0.0}
+        ,{400, -0.7, -0.4}
+        
+    };
+
+    const float fAutoInterval_routin_2[][3] = {
     {500, 0, 1},
     {0,0,0}
-    
+    };
+
+    const float fAutoInterval_routin_3[][3] = {
+    {500, 0, 1},
+    {0,0,0}
     };
 #endif
 uint64_t u64SysTick = 0;
@@ -232,11 +255,79 @@ void setup()
 
     #ifdef ENABLE_AUTO_MODE
         vServoDegrab();
-        for(uint8_t cnt = 0; cnt < sizeof(fAutoInterval)/sizeof(float); cnt++){
-            fForwardSpeed = fAutoInterval[cnt][1];
-            fTurnSpeed    = fAutoInterval[cnt][2];
-            vServoTurn(fForwardSpeed, fTurnSpeed);
-            delay(fAutoInterval[cnt][0]);
+
+        uint8_t ps2x_mode = 0;
+        uint32_t length_cnt;
+
+        DEBUG_PRINT("ENTERING AUTO MODE, WAIT FOR TRIGGER");
+        while(!ps2x.Button(PSB_CROSS) && !ps2x.Button(PSB_CIRCLE) && !ps2x.Button(PSB_SQUARE)){
+            ps2x.read_gamepad(); 
+            DEBUG_PRINT(String("WAIT FOR TRIGGER.... >>>") + String(ps2x.Button(PSB_CROSS)) + " " + String(ps2x.Button(PSB_CIRCLE)) + " " + String(ps2x.Button(PSB_SQUARE)));
+            delay(50);
+        }
+
+        if(ps2x.Button(PSB_CROSS)){
+            ps2x_mode = 1;
+            length_cnt = sizeof(fAutoInterval_routin_1)/sizeof(float)/3;
+            DEBUG_PRINT("TRIGGED, SOURCE: PSB_CROSS");
+        }
+
+        if(ps2x.Button(PSB_CIRCLE)){
+            ps2x_mode = 2;
+            length_cnt = sizeof(fAutoInterval_routin_2)/sizeof(float)/3;
+            DEBUG_PRINT("TRIGGED, SOURCE: PSB_CIRCLE");
+        }
+
+        if(ps2x.Button(PSB_SQUARE)){
+            ps2x_mode = 3;
+            length_cnt = sizeof(fAutoInterval_routin_3)/sizeof(float)/3;
+            DEBUG_PRINT("TRIGGED, SOURCE: PSB_SQUARE");
+        }
+
+        for(uint8_t cnt = 0; cnt < length_cnt; cnt++){
+            switch(ps2x_mode){
+                case 1:
+                    vServoTurn(fAutoInterval_routin_1[cnt][1], fAutoInterval_routin_1[cnt][2]);
+                    DEBUG_PRINT(String("CASE PSB_CROSS >> Speed: ") + String(fAutoInterval_routin_1[cnt][1]) + String(" Turn: ") +String(fAutoInterval_routin_1[cnt][2]));
+                    
+                    if (fAutoInterval_routin_1[cnt][0] != -1.0)
+                        delay(fAutoInterval_routin_1[cnt][0]);
+                    else
+                    if(fAutoInterval_routin_1[cnt][0] == -1.0)
+                        vServoGrab();
+                    else
+                        vServoDegrab();
+
+                    break;
+
+                case 2:
+                    vServoTurn(fAutoInterval_routin_2[cnt][1], fAutoInterval_routin_2[cnt][2]);
+                    DEBUG_PRINT(String("CASE PSB_CIRCLE >> Speed: ") + String(fAutoInterval_routin_2[cnt][1]) + String(" Turn: ") +String(fAutoInterval_routin_2[cnt][2]));                    
+                    if (fAutoInterval_routin_2[cnt][0] > 0.0)
+                        delay(fAutoInterval_routin_2[cnt][0]);
+                    else
+                        if(fAutoInterval_routin_2[cnt][0] == -1.0)
+                            vServoGrab();
+                        else
+                            vServoDegrab();
+                    break;
+
+                case 3:
+                    vServoTurn(fAutoInterval_routin_3[cnt][1], fAutoInterval_routin_3[cnt][2]);
+                    DEBUG_PRINT(String("CASE PSB_SQUARE >> Speed: ") + String(fAutoInterval_routin_3[cnt][1]) + String(" Turn: ") +String(fAutoInterval_routin_3[cnt][2]));                                        
+                    if (fAutoInterval_routin_3[cnt][0] != -1.0)
+                        delay(fAutoInterval_routin_3[cnt][0]);
+                    else
+                    if(fAutoInterval_routin_3[cnt][0] == -1.0)
+                        vServoGrab();
+                    else
+                        vServoDegrab();
+                    break;
+
+                default:
+                    vServoGrab();
+                    while(1);
+            }
         }
     #endif
 
@@ -260,10 +351,6 @@ void setup()
                     }
             }
         }
-        vServoGrab();
-        vServoDegrab();
-        vServoDegrab();
-        vServoDegrab();
         vServoDegrab();
         delay(1000);
         fForwardSpeed = 0.0;
