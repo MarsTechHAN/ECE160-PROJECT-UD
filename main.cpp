@@ -120,22 +120,72 @@ Servo servoG;
         {600, 0, 1 }
         ,{1000, -1, 0}
         ,{4000, 1, 0.17}    //first zombie
+
+        ,{-1.0, 0, 0}
+        ,{400, 0.0,0.0}
+
+        ,{400, 0.0, 0.4} 
+
+        ,{1200, 1.0, 0.0}       
+        ,{600, 0.0, -0.4}
+
+        ,{300, 1.0, 0.0}
+
+        ,{-2.0, 0, 0}
+        ,{400, 0, 0}
+
+        ,{1000, 1.0, 0}
+        
+
+        ,{750, 0.0, -0.3}
+
+
+
+        ,{800, 0.8, 0.0}
+
+        
+        ,{1200, 0.3, -0.32}
+
+
+        ,{800, 0.8, 0.10}
+        ,{600, 1.0, -0.3}
+        ,{1000, 1.0, 0.0}
+        ,{1800,0.8, 0.25}
+        ,{4000, 1.0, 0.0}
+
+        ,{400, -1.0, 0.0}
+        ,{600, 1.0, 0.0}
+        
+        // 18.945s
+        ,{7000, -1.0, 0.2}
+        ,{610, 0, -1 }
+        
+        
+    };
+
+    const float fAutoInterval_routin_2[][3] = {
+        {565, 0, 1 }
+        ,{600, -1, 0}
+        ,{4000, 1, 0.17}    //first zombie
         ,{400, 0.0, 0.4}
         ,{1200, 1.0, 0.0}
         ,{600, 0.0, -0.4}
         ,{1000, 1.0, 0.0}   //second zombie
         ,{700, 0.0, -0.3}
         ,{1000, 0.8, 0.0}    //third zombie
-        ,{600, 1.0, -0.3}
-        ,{3000,0.8, -0.25}
-        ,{6000, 1.0, 0.0}
-        ,{400, -0.7, -0.4}
+        ,{700, 1.0, -0.5}
+        ,{3000,0.8, -0.15}
+        ,{3000, 1.0, 0.0}
+        ,{80, 0.0, -0.5}
+        ,{4000, 1.0, 0.0}
+        ,{400, -1.0, 0.0}
+        ,{600, 1.0, 0.0}
         
-    };
+        // 18.945s
+        ,{7000, -1.0, 0.2}
+        ,{610, 0, -1 }
+        ,{6000, 1.0, 0.12}
 
-    const float fAutoInterval_routin_2[][3] = {
-    {500, 0, 1},
-    {0,0,0}
     };
 
     const float fAutoInterval_routin_3[][3] = {
@@ -290,14 +340,19 @@ void setup()
                     vServoTurn(fAutoInterval_routin_1[cnt][1], fAutoInterval_routin_1[cnt][2]);
                     DEBUG_PRINT(String("CASE PSB_CROSS >> Speed: ") + String(fAutoInterval_routin_1[cnt][1]) + String(" Turn: ") +String(fAutoInterval_routin_1[cnt][2]));
                     
-                    if (fAutoInterval_routin_1[cnt][0] != -1.0)
+                    if (fAutoInterval_routin_1[cnt][0] > 0.0){
                         delay(fAutoInterval_routin_1[cnt][0]);
-                    else
-                    if(fAutoInterval_routin_1[cnt][0] == -1.0)
-                        vServoGrab();
-                    else
-                        vServoDegrab();
-
+                    }
+                    else{
+                        if(fAutoInterval_routin_1[cnt][0] == -1.0){
+                            vServoGrab();
+                            DEBUG_PRINT("STATUS GRABED");
+                        }
+                        else{
+                            vServoDegrab();
+                            DEBUG_PRINT("STATUS DEGRABED");
+                        }
+                    }
                     break;
 
                 case 2:
@@ -306,7 +361,7 @@ void setup()
                     if (fAutoInterval_routin_2[cnt][0] > 0.0)
                         delay(fAutoInterval_routin_2[cnt][0]);
                     else
-                        if(fAutoInterval_routin_2[cnt][0] == -1.0)
+                        if(fAutoInterval_routin_2[cnt][0] == -1)
                             vServoGrab();
                         else
                             vServoDegrab();
@@ -323,10 +378,6 @@ void setup()
                     else
                         vServoDegrab();
                     break;
-
-                default:
-                    vServoGrab();
-                    while(1);
             }
         }
     #endif
