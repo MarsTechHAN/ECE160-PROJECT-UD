@@ -1,9 +1,9 @@
 /*====================INC FILE==================*/
-#include <Arduino.h>
-#include <Servo.h>
+#include <Arduino.h>  //Arduino library
+#include <Servo.h>    //servo library
 /*=================INC FILE END=================*/
 
-/*================GLOBAL DEFINE=================*/
+/*================GLOBAL DEFINE=================*/  //define global variables
 const float SERVO_CALI_L = 93.0; //SERVO MID POINT CALI NUMBER
 const float SERVO_CALI_R = 93.0; //SERVO MID POINT CALI NUMBER
 
@@ -11,68 +11,68 @@ const float SERVO_MAGIC = 0.98;
 
 const uint8_t WHEEL_THRESHOLD   = 10; //SERVO FLEX REGION 
 
-//#define USE_CURVED_THROTT
-//#define USE_CURVED_TURN
+//#define USE_CURVED_THROTT //turn on curved throttle program
+//#define USE_CURVED_TURN   //turn on curved turn program
 
-#define USE_BLUETOOTH_JOYSTICK
-//#define USE_LORA_JOYSTICK
-//#define USE_IR_REMOTE
-//#define USE_NRF24_JOYSTICK
+#define USE_BLUETOOTH_JOYSTICK  //turn on bluetooth joystick program
+//#define USE_LORA_JOYSTICK     //turn on lora joystick program
+//#define USE_IR_REMOTE         //turn on IR remote controller program
+//#define USE_NRF24_JOYSTICK    //turn on NRF24 joystick program
 
-#define ENABLE_AUTO_MODE
-//#define ENABLE_FAKE_AUTO_MODE
+#define ENABLE_AUTO_MODE        //turn on autonomous mode code
+//#define ENABLE_FAKE_AUTO_MODE //turn on Phase II demo auto code
 
-#define ENABLE_FRC_JOYSTICK_MODE
+#define ENABLE_FRC_JOYSTICK_MODE//turn on tank drive mode
 
-#define EN_DEBUG
+#define EN_DEBUG                //turn on debug mode
 
 //==========FILE INCLUDED============
 #ifdef USE_IR_REMOTE
-    #include <IRLremote.h>
+    #include <IRLremote.h>      //load IR remote library
 #endif
 
 #ifdef USE_BLUETOOTH_JOYSTICK
-    #include <PS2X_lib.h> 
+    #include <PS2X_lib.h>       //load PS2X library
 #endif
 
 //=======FILE INCLUDED END============
 
-#ifdef EN_DEBUG
+#ifdef EN_DEBUG                 //debug program
     #define DEBUG_PRINT(str) \
     Serial.print(millis()); \
     Serial.print(": "); \
-    Serial.print(__FUNCTION__); \
+    Serial.print(__FUNCTION__); \ //print running function
     Serial.print("() in "); \
     Serial.print(__FILE__); \
     Serial.print(':'); \
     Serial.print(__LINE__); \
     Serial.print(' '); \
-    Serial.println(str);
+    Serial.println(str);          //print value
 #else
     #define DEBUG_PRINT(str)
 #endif
 
 #ifdef USE_CURVED_THROTT
-    #define THROTTCALU(x) (3.0*pow(10.0, -5)*((x) * (x) * (x)) + double(0.1916)*(x))
+    #define THROTTCALU(x) (3.0*pow(10.0, -5)*((x) * (x) * (x)) + double(0.1916)*(x))  //use cube function to curve the running speed
 #endif
 
 #ifdef USE_CURVED_TURN
-    #define CURVECALU(x) (3.0*pow(10.0, -5)*((x) * (x) * (x)) + double(0.1916)*(x))
+    #define CURVECALU(x) (3.0*pow(10.0, -5)*((x) * (x) * (x)) + double(0.1916)*(x))   //use cube function to curve the turn speed
 #endif
 
 #ifndef ENABLE_AUTO_MODE
-    #warning "############AUTOMATION MODE DISABLED##################"
+    #warning "############AUTOMATION MODE DISABLED##################" //warning for autonomous mode
 #endif
 /*==============GLOBAL DEFINE END===============*/
 
 /*=================PIN DEFINE===================*/
-const uint8_t SERVO_LEFT_PIN    = 13;
-const uint8_t SERVO_RIGHT_PIN   = 12;
+const uint8_t SERVO_LEFT_PIN    = 13;   //define pin for left servo
+const uint8_t SERVO_RIGHT_PIN   = 12;   //define pin for right servo
 
-const uint8_t SERVO_GRAP_PIN    = 11;
+const uint8_t SERVO_GRAP_PIN    = 11;   //define pin for gripper servo
 
-#ifdef USE_IR_REMOTE
-    const uint8_t IR_PIN        = 2;
+#ifdef USE_IR_REMOTE    //define pins for IR remote
+    const uint8_t  IR_PIN        = 2;
     const uint32_t UP_ID        = 70;
     const uint32_t LEFT_ID      = 68;
     const uint32_t DOWN_ID      = 21;
@@ -81,7 +81,7 @@ const uint8_t SERVO_GRAP_PIN    = 11;
     const uint32_t DEGRAB_ID    = 71;
 #endif
 
-#ifdef USE_BLUETOOTH_JOYSTICK
+#ifdef USE_BLUETOOTH_JOYSTICK //define pins for joystick
     const uint8_t PS2X_CLK      = 5;
     const uint8_t PS2X_CMD      = 7;
     const uint8_t PS2X_ATT      = 4;
@@ -91,81 +91,34 @@ const uint8_t SERVO_GRAP_PIN    = 11;
 
 
 /*==============INSTANLIZATION==================*/
-Servo servoL;
-Servo servoR;
-Servo servoG;
+Servo servoL;                   //left servo control object
+Servo servoR;                   //right servo control object
+Servo servoG;                   //gripper servo control object
 #ifdef USE_BLUETOOTH_JOYSTICK
-    PS2X ps2x;
-    int8_t CALI_ZERO_LX = 0;
-    int8_t CALI_ZERO_LY = 0;
-    int8_t CALI_ZERO_RX = 0;
-    int8_t CALI_ZERO_RY = 0;
+    PS2X ps2x;                  //PS2X control object
+    int8_t CALI_ZERO_LX = 0;    //zero the x position of left joy
+    int8_t CALI_ZERO_LY = 0;    //zero the y position of left joy
+    int8_t CALI_ZERO_RX = 0;    //zero the x position of right joy
+    int8_t CALI_ZERO_RY = 0;    //zero the y position of right joy
 #endif
 
 #ifdef USE_IR_REMOTE
-    CNec IRLremote;
+    CNec IRLremote;             //instantiate the IR remote
 #endif
 
 #ifdef ENABLE_FAKE_AUTO_MODE
-    //int64_t timeInterval[]    = {1000 ,160  ,-1   ,500  ,550  ,8000, 160, 500, 350};
-    int64_t timeInterval[]    = {3600 ,2000 ,400  ,-1   ,500  ,1600  ,8000, 240, 500, 350}; //for right one
-    float speedInterval[]     = {1.0  ,-1.0, 0.0  ,0.2  ,0.0  ,0.0  ,1.0, 0.0,  1.0, -0.5};
-    //float turnInterval[]      = {0.0  ,-0.5 ,0.0  ,0.0  ,-1  ,0 , -0.5,  0.0, 0.0}; // for right one
-    float turnInterval[]      = {0.0  ,0.0, 0.5 ,0.0  ,0.0  ,1  ,0 , -0.5,  0.0, 0.0};
+    //int64_t timeInterval[]    = {1000 ,160  ,-1   ,500  ,550  ,8000, 160, 500, 350};          //parameters for left one
+    int64_t timeInterval[]    = {3600 ,2000 ,400  ,-1   ,500  ,1600  ,8000, 240, 500, 350};     //parameters for right one
+    float speedInterval[]     = {1.0  ,-1.0, 0.0  ,0.2  ,0.0  ,0.0  ,1.0, 0.0,  1.0, -0.5};     //parameters for both
+    //float turnInterval[]      = {0.0  ,-0.5 ,0.0  ,0.0  ,-1  ,0 , -0.5,  0.0, 0.0};           //parameters for right one
+    float turnInterval[]      = {0.0  ,0.0, 0.5 ,0.0  ,0.0  ,1  ,0 , -0.5,  0.0, 0.0};          //parameters for left one
 #endif
 
 #ifdef ENABLE_AUTO_MODE
     
-    const float fAutoInterval_routin_1[][3] = {
+    const float fAutoInterval_routin_1[][3] = {   //parameters for autonomous mode
         {600, 0, 1 }
         ,{1000, -1, 0}
-        ,{4000, 1, 0.17}    //first zombie
-
-        ,{-1.0, 0, 0}
-        ,{400, 0.0,0.0}
-
-        ,{400, 0.0, 0.4} 
-
-        ,{1200, 1.0, 0.0}       
-        ,{600, 0.0, -0.4}
-
-        ,{300, 1.0, 0.0}
-
-        ,{-2.0, 0, 0}
-        ,{400, 0, 0}
-
-        ,{1000, 1.0, 0}
-        
-
-        ,{750, 0.0, -0.3}
-
-
-
-        ,{800, 0.8, 0.0}
-
-        
-        ,{1200, 0.3, -0.32}
-
-
-        ,{800, 0.8, 0.10}
-        ,{600, 1.0, -0.3}
-        ,{1000, 1.0, 0.0}
-        ,{1800,0.8, 0.25}
-        ,{4000, 1.0, 0.0}
-
-        ,{400, -1.0, 0.0}
-        ,{600, 1.0, 0.0}
-        
-        // 18.945s
-        ,{7000, -1.0, 0.2}
-        ,{610, 0, -1 }
-        
-        
-    };
-
-    const float fAutoInterval_routin_2[][3] = {
-        {565, 0, 1 }
-        ,{600, -1, 0}
         ,{4000, 1, 0.17}    //first zombie
         ,{400, 0.0, 0.4}
         ,{1200, 1.0, 0.0}
@@ -173,19 +126,16 @@ Servo servoG;
         ,{1000, 1.0, 0.0}   //second zombie
         ,{700, 0.0, -0.3}
         ,{1000, 0.8, 0.0}    //third zombie
-        ,{700, 1.0, -0.5}
-        ,{3000,0.8, -0.15}
-        ,{3000, 1.0, 0.0}
-        ,{80, 0.0, -0.5}
-        ,{4000, 1.0, 0.0}
-        ,{400, -1.0, 0.0}
-        ,{600, 1.0, 0.0}
+        ,{600, 1.0, -0.3}
+        ,{3000,0.8, -0.25}
+        ,{6000, 1.0, 0.0}
+        ,{400, -0.7, -0.4}
         
-        // 18.945s
-        ,{7000, -1.0, 0.2}
-        ,{610, 0, -1 }
-        ,{6000, 1.0, 0.12}
+    };
 
+    const float fAutoInterval_routin_2[][3] = {
+    {500, 0, 1},
+    {0,0,0}
     };
 
     const float fAutoInterval_routin_3[][3] = {
@@ -193,7 +143,7 @@ Servo servoG;
     {0,0,0}
     };
 #endif
-uint64_t u64SysTick = 0;
+uint64_t u64SysTick = 0;      //initialize the variable
 bool bIsGrab = false;
 float fForwardSpeed = 0.0;
 float fTurnSpeed = 0.0;
@@ -203,9 +153,9 @@ uint32_t cnt = 0;
 
 /*==============INIT FUNCTION======================*/
 void vInitServo(){
-    servoL.attach(SERVO_LEFT_PIN);
-    servoR.attach(SERVO_RIGHT_PIN);
-    servoG.attach(SERVO_GRAP_PIN);
+    servoL.attach(SERVO_LEFT_PIN);        //connect the left servo to servoPin
+    servoR.attach(SERVO_RIGHT_PIN);       //connect the right servo to servoPin
+    servoG.attach(SERVO_GRAP_PIN);        //connect the grap servo to servoPin
 }
 /*==============INIT FUNCTION END==================*/
 
@@ -240,11 +190,11 @@ void vServoDual(float fServoLeft, float fServoRight){
 }
 
 void vServoGrab(){
-    servoG.write(180);
+    servoG.write(180);    //let gripper servo grab the zombie
 }
 
 void vServoDegrab(){
-    servoG.write(0);
+    servoG.write(0);      //let zombie go off the gripper
 }
 
 void vWaitForTrigger(uint8_t u8PORT, uint32_t u32TRIGGER_LEVEL, int bUPLOWER){
@@ -267,31 +217,31 @@ void vWaitForTrigger(uint8_t u8PORT, uint32_t u32TRIGGER_LEVEL, int bUPLOWER){
 /*=================SERVO CALSS END=================*/
 
 #ifdef USE_BLUETOOTH_JOYSTICK
-    void vBLEJoystickCalib(){
-        ps2x.read_gamepad(); 
-        CALI_ZERO_LX = 128 - ps2x.Analog(PSS_LX);
-        CALI_ZERO_LY = 128 - ps2x.Analog(PSS_LY);
-        CALI_ZERO_RX = 128 - ps2x.Analog(PSS_RX);
-        CALI_ZERO_RY = 128 - ps2x.Analog(PSS_RY);
+    void vBLEJoystickCalib(){                       //use the ps2x to control the robot
+        ps2x.read_gamepad();                          
+        CALI_ZERO_LX = 128 - ps2x.Analog(PSS_LX);   //read the x value of the left joy
+        CALI_ZERO_LY = 128 - ps2x.Analog(PSS_LY);   //read the y value of the left joy
+        CALI_ZERO_RX = 128 - ps2x.Analog(PSS_RX);   //read the x value of the right joy
+        CALI_ZERO_RY = 128 - ps2x.Analog(PSS_RY);   //read the y value of the right joy
         DEBUG_PRINT(String("OFFSET: LX")+String(CALI_ZERO_LX) +
                         String(" LY")+String(CALI_ZERO_LY) +
                             String(" RX")+String(CALI_ZERO_RX) +
-                                String(" RY")+String(CALI_ZERO_RY));
+                                String(" RY")+String(CALI_ZERO_RY));  //debugging mode
     }
 #endif
 void setup()
 {
-    Serial.begin(115200);
-    DEBUG_PRINT("PROGRAM START, BANDRATE INIT TO 115200");
+    Serial.begin(115200);   //Initialize the serial port & set rate to 115200 bits per second (bps)
+    DEBUG_PRINT("PROGRAM START, BANDRATE INIT TO 115200");  //debugging mode
     
-    vInitServo();
+    vInitServo();   //set the servo to corresponding pin
 
     #ifdef USE_BLUETOOTH_JOYSTICK
-        uint8_t error = ps2x.config_gamepad(PS2X_CLK, PS2X_CMD, PS2X_ATT, PS2X_DAT, false, false);
+        uint8_t error = ps2x.config_gamepad(PS2X_CLK, PS2X_CMD, PS2X_ATT, PS2X_DAT, false, false);  //initialize the ps2x joystick
         if(0 == error){
-            DEBUG_PRINT("PS2X JOYSTICK INIT SUCCESS");
+            DEBUG_PRINT("PS2X JOYSTICK INIT SUCCESS");  //debugging mode
         }else{
-            DEBUG_PRINT(String("PS2X JOYSTICK INIT FAIL, ERROR CODE: ") + error);
+            DEBUG_PRINT(String("PS2X JOYSTICK INIT FAIL, ERROR CODE: ") + error); //print the error message for debugging
             while(1);
         }
         vBLEJoystickCalib();
@@ -340,19 +290,14 @@ void setup()
                     vServoTurn(fAutoInterval_routin_1[cnt][1], fAutoInterval_routin_1[cnt][2]);
                     DEBUG_PRINT(String("CASE PSB_CROSS >> Speed: ") + String(fAutoInterval_routin_1[cnt][1]) + String(" Turn: ") +String(fAutoInterval_routin_1[cnt][2]));
                     
-                    if (fAutoInterval_routin_1[cnt][0] > 0.0){
+                    if (fAutoInterval_routin_1[cnt][0] != -1.0)
                         delay(fAutoInterval_routin_1[cnt][0]);
-                    }
-                    else{
-                        if(fAutoInterval_routin_1[cnt][0] == -1.0){
-                            vServoGrab();
-                            DEBUG_PRINT("STATUS GRABED");
-                        }
-                        else{
-                            vServoDegrab();
-                            DEBUG_PRINT("STATUS DEGRABED");
-                        }
-                    }
+                    else
+                    if(fAutoInterval_routin_1[cnt][0] == -1.0)
+                        vServoGrab();
+                    else
+                        vServoDegrab();
+
                     break;
 
                 case 2:
@@ -361,7 +306,7 @@ void setup()
                     if (fAutoInterval_routin_2[cnt][0] > 0.0)
                         delay(fAutoInterval_routin_2[cnt][0]);
                     else
-                        if(fAutoInterval_routin_2[cnt][0] == -1)
+                        if(fAutoInterval_routin_2[cnt][0] == -1.0)
                             vServoGrab();
                         else
                             vServoDegrab();
@@ -378,6 +323,10 @@ void setup()
                     else
                         vServoDegrab();
                     break;
+
+                default:
+                    vServoGrab();
+                    while(1);
             }
         }
     #endif
